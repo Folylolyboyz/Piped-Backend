@@ -7,15 +7,15 @@ WORKDIR /app/
 COPY . /app/
 
 # Use correct cache mount format for Gradle dependencies
-RUN --mount=type=cache,id=gradle-cache-${CACHE_KEY},target=/root/.gradle/caches \
-    --mount=type=cache,id=gradle-wrappers-${CACHE_KEY},target=/root/.gradle/wrapper \
+RUN --mount=type=cache,id=gradle-cache,target=/root/.gradle/caches \
+    --mount=type=cache,id=gradle-wrappers,target=/root/.gradle/wrapper \
     ./gradlew shadowJar
 
 # ---- Runtime Stage ----
 FROM eclipse-temurin:21-jre
 
 # Use correct cache mount format for APT packages
-RUN --mount=type=cache,id=apt-cache-${CACHE_KEY},target=/var/cache/apt \
+RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt \
     apt-get update && \
     apt-get install -y --no-install-recommends curl && \
     rm -rf /var/lib/apt/lists/*
