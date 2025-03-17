@@ -6,16 +6,16 @@ WORKDIR /app/
 # Copy project files
 COPY . /app/
 
-# Use cache for Gradle dependencies
-RUN --mount=type=cache,id=gradle-cache,target=/root/.gradle/caches \
-    --mount=type=cache,id=gradle-wrappers,target=/root/.gradle/wrapper \
+# Use correct cache mount format for Gradle dependencies
+RUN --mount=type=cache,id=gradle-cache-${CACHE_KEY},target=/root/.gradle/caches \
+    --mount=type=cache,id=gradle-wrappers-${CACHE_KEY},target=/root/.gradle/wrapper \
     ./gradlew shadowJar
 
 # ---- Runtime Stage ----
 FROM eclipse-temurin:21-jre
 
-# Use cache for APT packages
-RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt \
+# Use correct cache mount format for APT packages
+RUN --mount=type=cache,id=apt-cache-${CACHE_KEY},target=/var/cache/apt \
     apt-get update && \
     apt-get install -y --no-install-recommends curl && \
     rm -rf /var/lib/apt/lists/*
@@ -30,4 +30,7 @@ COPY VERSION .
 EXPOSE 8080
 
 # Health check for container
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 C
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 CMD /docker-healthcheck.sh
+
+# Set entrypoint
+ENTRYPOINT ["/hotspot-entrypoint.sh"]
